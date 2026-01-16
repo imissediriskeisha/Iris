@@ -1,0 +1,266 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Visual Novel Engine</title>
+  <style>
+    :root{
+      --max-width:900px;
+      --ui-pad:20px;
+      --textbox-bg: rgba(0,0,0,0.65);
+      --textbox-color:#fff;
+      --font: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    }html,body{
+  margin:0;
+  height:100%;
+  background:#000;
+  font-family:var(--font);
+  color:var(--textbox-color);
+}
+
+.wrap{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:24px;
+  box-sizing:border-box;
+}
+
+#game{
+  width:100%;
+  max-width:var(--max-width);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* STAGE */
+#stage{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  background:#111;
+  overflow:hidden;
+  border-radius:12px;
+}
+
+#background{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:0;
+}
+
+.sprite{
+  position:absolute;
+  bottom:0;
+  max-height:100%;
+  user-select:none;
+  pointer-events:none;
+  transition:opacity .3s, transform .3s;
+}
+
+.left{
+  left:2%;
+  transform:translateX(0);
+}
+
+.right{
+  right:2%;
+  transform:translateX(0);
+}
+
+.hidden{
+  opacity:0;
+}
+
+/* TEXTBOX */
+#textbox{
+  background:var(--textbox-bg);
+  padding:var(--ui-pad);
+  border-radius:12px;
+  font-size:20px;
+  line-height:1.4;
+  min-height:80px;
+  cursor:pointer;
+}
+
+#textbox .caret{
+  display:inline-block;
+  width:10px;
+  height:1.1em;
+  background:#fff;
+  margin-left:6px;
+  animation:blink 1s steps(1) infinite;
+}
+
+@keyframes blink{50%{opacity:0}}
+
+/* CHOICES */
+#choices{
+  display:none;
+  flex-direction:column;
+  gap:8px;
+}
+
+.choice{
+  background:#fff;
+  color:#000;
+  padding:12px;
+  border-radius:10px;
+  cursor:pointer;
+  text-align:center;
+  font-size:18px;
+}
+
+.choice:active{transform:translateY(1px)}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="game">
+      <div id="stage">
+        <img id="background" src="https://cdn.discordapp.com/attachments/1417112659937067102/1461824008139051119/IMG20260115033825.jpg?ex=696bf532&is=696aa3b2&hm=9888b3b78abcc4c194673517aea794d38f6be15fb713b2ecb7c8927b362d1050&.jpg" alt="background" />
+        <img id="spriteLeft" class="sprite left hidden" src="https://cdn.discordapp.com/attachments/1417112659937067102/1461823423540891892/BackgroundEraser_20260117_044229015.png?ex=696bf4a7&is=696aa327&hm=35714efb47c2a134e557615f3d05db794cfad555da7f39ab6c203b864333d7b4&.jpg" alt="left sprite" />
+        <img id="spriteRight" class="sprite right hidden" src="https://cdn.discordapp.com/attachments/1417112659937067102/1461796324121776128/IMG-20260117-WA0000.jpg?ex=696bdb6a&is=696a89ea&hm=0385b4a4d28afedf8703536c6ce04f5cf16db8a52b1a9e2dab99a8ccecd6a665&.jpg" alt="right sprite" />
+      </div><div id="textbox" tabindex="0"></div>
+  <div id="choices"></div>
+</div>
+
+  </div><script>
+  const textbox = document.getElementById('textbox');
+  const choicesBox = document.getElementById('choices');
+  const bg = document.getElementById('background');
+  const leftSprite = document.getElementById('spriteLeft');
+  const rightSprite = document.getElementById('spriteRight');
+
+  let typing=false, timer=null, currentText="";
+  const speed=28;
+
+  /* ===== ENGINE API ===== */
+  function setBackground(src){ bg.src = src || ""; }
+
+  function setLeftSprite(src){
+    if(src){ leftSprite.src=src; leftSprite.classList.remove('hidden'); }
+    else leftSprite.classList.add('hidden');
+  }
+
+  function setRightSprite(src){
+    if(src){ rightSprite.src=src; rightSprite.classList.remove('hidden'); }
+    else rightSprite.classList.add('hidden');
+  }
+
+  function clearChoices(){ choicesBox.innerHTML=""; choicesBox.style.display='none'; }
+
+  function showChoices(list){
+    clearChoices();
+    choicesBox.style.display='flex';
+    list.forEach(c=>{
+      const btn=document.createElement('div');
+      btn.className='choice';
+      btn.textContent=c.text;
+      btn.onclick=c.onSelect;
+      choicesBox.appendChild(btn);
+    });
+  }
+
+  function typeText(text,onDone=()=>{}){
+    typing=true;
+    currentText=text;
+    textbox.innerHTML="";
+    const span=document.createElement('span');
+    const caret=document.createElement('span');
+    caret.className='caret';
+    textbox.append(span,caret);
+    let i=0;
+    clearInterval(timer);
+    timer=setInterval(()=>{
+      span.textContent+=text[i]||"";
+      i++;
+      if(i>=text.length){
+        clearInterval(timer);
+        typing=false;
+        span.textContent=text;
+        onDone();
+      }
+    },speed);
+  }
+
+  function skipTyping(){
+    if(!typing) return;
+    clearInterval(timer);
+    typing=false;
+    textbox.innerHTML=currentText+'<span class="caret"></span>';
+  }
+
+  textbox.onclick=()=>{ if(typing) skipTyping(); };
+
+  /* Expose helpers for your story logic */
+  window.VN={
+    setBackground,
+    setLeftSprite,
+    setRightSprite,
+    typeText,
+    showChoices,
+    clearChoices
+  };
+
+  /* ===== STORY SCRIPT ===== */
+  let scene = 0;
+
+  function nextScene(){ scene++; runScene(); }
+
+  function runScene(){
+    VN.clearChoices();
+
+    switch(scene){
+      case 0:
+        VN.setBackground("https://cdn.discordapp.com/attachments/1417112659937067102/1461824008139051119/IMG20260115033825.jpg?ex=696bf532&is=696aa3b2&hm=9888b3b78abcc4c194673517aea794d38f6be15fb713b2ecb7c8927b362d1050&.jpg");
+        VN.setLeftSprite(null);
+        VN.setRightSprite(null);
+        VN.typeText("You reached a dimly lit house. Everything seems quiet.", nextScene);
+        break;
+      case 1:
+        VN.typeText("You breathe a sighs of relief and regaining your composure.", nextScene);
+        break;
+      case 2:
+        VN.setLeftSprite("https://cdn.discordapp.com/attachments/1417112659937067102/1461823423540891892/BackgroundEraser_20260117_044229015.png?ex=696bf4a7&is=696aa327&hm=35714efb47c2a134e557615f3d05db794cfad555da7f39ab6c203b864333d7b4&.jpg");
+        VN.typeText(" Where am i...", nextScene);
+        break;
+      case 3:
+        VN.showChoices([
+          { text: "Look Around?", onSelect: ()=>{scene=4; runScene();} },
+          { text: "Keep Running", onSelect: ()=>{scene=7; runScene();} }
+        ]);
+        break;
+      case 4:
+        VN.typeText("Does it really matter?", nextScene);
+        break;
+      case 5:
+        VN.setRightSprite("https://cdn.discordapp.com/attachments/1417112659937067102/1461796324121776128/IMG-20260117-WA0000.jpg?ex=696bdb6a&is=696a89ea&hm=0385b4a4d28afedf8703536c6ce04f5cf16db8a52b1a9e2dab99a8ccecd6a665&.jpg");
+        VN.typeText("???: You haven't killed yourself yet.", nextScene);
+        break;
+      case 6:
+        VN.typeText("I'm sorry.", nextScene);
+        break;
+      case 7:
+        VN.typeText("You run away fast as the voice fades, Silence returns.", nextScene);
+        break;
+      case 8:
+        VN.setLeftSprite(null);
+        VN.setRightSprite(null);
+        VN.typeText("I could never forgive myself", ()=>{});
+        break;
+    }
+  }
+
+  /* Start story */
+  runScene();
+</script></body>
+</html>
