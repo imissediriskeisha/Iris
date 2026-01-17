@@ -229,47 +229,77 @@ function runScene(){
       setBackground("https://cdn.discordapp.com/attachments/1417112659937067102/1461828007797719234/IMG20251205023931.jpg?ex=696bf8ec&is=696aa76c&hm=32cd013add662c006b1a36867209b83561be92b41ff267e746be270a931fdd87&.jpg");
       setLeftSprite(null);
       setRightSprite(null);
-      typeText("You reached a dimly lit area. Everything seems quiet.");
+      typeText("This is a documentary and you found it");
       break;
 
-    case 1:
-      typeText("You breathe a sigh of relief, trying to calm yourself.");
+case 1:
+      typeText("It was more of an experience i wanted to be constantly reminded, therefore there will be no save files.");
       break;
 
-    case 2:
-      setLeftSprite(leftSprite.src);
-      typeText("Where am I...?");
+case 2:
+      typeText("Before we proceed");
       break;
 
-    case 3:
+case 3:
+      typeText("I wanted to ask");
+      break;
+
+case 4:
+      typeText("How do you think of society?");
+      break;
+
+case 5:
       showChoices([
-        { text:"Look around", onSelect:()=>{scene=4; runScene();} },
-        { text:"Keep running", onSelect:()=>{scene=7; runScene();} }
+        { text:"What About it?", onSelect:()=>{scene=6; runScene();} },
+        { text:"?????", onSelect:()=>{scene=10; runScene();} }
       ]);
       break;
 
-    case 4:
-      typeText("Does it really matter?");
+case 6:
+      typeText("Oh well, I found a book a few years back when i was 16");
       break;
 
-    case 5:
-      setRightSprite(rightSprite.src);
-      typeText("???: You haven't killed yourself yet.");
+case 7:
+      typeText("It actually changed my perspective on society");
       break;
 
-    case 6:
-      typeText("I'm sorry.");
+case 8:
+      typeText("I wanted you to see it soon");
       break;
 
-    case 7:
-      typeText("You run as fast as you can. The voice fades into silence.");
+case 9:
+      typeText("...");
       break;
 
-    case 8:
-      setLeftSprite(null);
-      setRightSprite(null);
-      typeText("I could never forgive myself.");
+case 10:
+      typeText("Forgive me.");
       break;
+
+case 11:
+setBackground("https://cdn.discordapp.com/attachments/1417112659937067102/1462032796477554902/IMG20250905005125.jpg?ex=696cb7a5&is=696b6625&hm=da2edf1726acad36a3491561dbc31a7f9742260654930b9bb2ee5540d179c60a&.jpg");
+      typeText("...");
+      break;
+
+case 12:
+      typeText("The character woke up in a cluttered room, there's an unpleasant smell of iron in the room");
+      break;
+
+case 13:
+      typeText("(headaches from oversleeping had caught up to him)");
+      break;
+
+case 14:
+      typeText("(as the character visions clears slowly)");
+      break;
+
+case 15:
+      showChoices([
+        { text:"Look Outside", onSelect:()=>{scene=16; runScene();} },
+        { text:"Get Online", onSelect:()=>{scene=10; runScene();} }
+      ]);
+      break;
+
+
   }
 }
 
